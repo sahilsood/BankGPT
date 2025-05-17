@@ -1,6 +1,5 @@
 package com.example.aichatapp.screens
 
-import android.annotation.SuppressLint
 import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Build
@@ -9,17 +8,9 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
-import androidx.compose.animation.core.LinearOutSlowInEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -30,37 +21,25 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.rounded.AddPhotoAlternate
 import androidx.compose.material.icons.rounded.Send
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DisplayMode
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.RadioButton
-import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -69,17 +48,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.graphics.drawable.toBitmap
@@ -89,17 +63,23 @@ import coil.compose.AsyncImagePainter
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import coil.size.Size
+import com.example.aichatapp.ACTION
+import com.example.aichatapp.TRANSFER_AMOUNT
 import com.example.aichatapp.ChatViewModel
 import com.example.aichatapp.R
+import com.example.aichatapp.TRANSFER_ACTION
+import com.example.aichatapp.TRANSFER_DATE
+import com.example.aichatapp.TRANSFER_RECIPIENT
 import com.example.aichatapp.data.ChatUiEvent
+import com.example.aichatapp.screens.components.ChatActionSelector
+import com.example.aichatapp.screens.components.TypingDots
+import com.example.aichatapp.screens.components.transfer.AmountInputField
+import com.example.aichatapp.screens.components.transfer.DateInputField
+import com.example.aichatapp.screens.components.transfer.RecipientSelector
+import com.example.aichatapp.screens.components.transfer.TransferConfirmItem
 import com.example.aichatapp.ui.theme.Purple40
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
-import java.time.Instant
-import java.time.LocalDate
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.util.Locale
 
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -149,36 +129,6 @@ fun ChatScreen(navController: NavHostController) {
     }
 }
 
-@Composable
-fun TypingDots() {
-    val infiniteTransition = rememberInfiniteTransition()
-    val delay = listOf(0, 150, 300)
-    Row(
-        modifier = Modifier
-            .padding(16.dp)
-            .wrapContentWidth(),
-        horizontalArrangement = Arrangement.spacedBy(6.dp)
-    ) {
-        delay.forEachIndexed { index, delayMillis ->
-            val scale by infiniteTransition.animateFloat(
-                initialValue = 0.5f,
-                targetValue = 1.2f,
-                animationSpec = infiniteRepeatable(
-                    animation = tween(600, delayMillis, easing = LinearOutSlowInEasing),
-                    repeatMode = RepeatMode.Reverse
-                )
-            )
-            Box(
-                modifier = Modifier
-                    .size(8.dp)
-                    .scale(scale)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primary)
-            )
-        }
-    }
-}
-
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun ChatScreen(
@@ -206,60 +156,75 @@ fun ChatScreen(
         ) {
             itemsIndexed(chatState.chatList) { _, chat ->
                 if (chat.isFromUser) {
-                    UserChatItem(chat.prompt, chat.bitmap)
+                    UserChatItem(prompt = chat.prompt, bitmap = chat.bitmap)
                 } else {
                     Column {
                         when (chat.type) {
-                            "action" -> {
+                            ACTION -> {
                                 ChatActionSelector(message = chat.message, onConfirm = { action ->
-                                    chatViewModel.onEvent(ChatUiEvent.SendPrompt(action, bitmap))
+                                    chatViewModel.onEvent(
+                                        event = ChatUiEvent.SendPrompt(
+                                            prompt = action,
+                                            bitmap = bitmap
+                                        )
+                                    )
                                 })
                             }
 
-                            "amount" -> {
+                            TRANSFER_AMOUNT -> {
                                 AmountInputField(
                                     message = chat.message,
                                     amount = amount,
                                     onAmountChange = { amount = it },
                                     onAmountSubmitted = { enteredAmount ->
                                         chatViewModel.onEvent(
-                                            ChatUiEvent.SendPrompt(
-                                                enteredAmount,
-                                                bitmap
-                                            )
+                                            event =
+                                                ChatUiEvent.SendPrompt(
+                                                    prompt = enteredAmount,
+                                                    bitmap = bitmap
+                                                )
                                         )
                                     }
                                 )
                             }
 
-                            "date" -> {
+                            TRANSFER_DATE -> {
                                 DateInputField(
                                     message = chat.message,
                                     selectedDateMillis = selectedDateMillis,
                                     onDateChange = { selectedDateMillis = it },
                                     onDateSubmitted = { selectedDate ->
                                         chatViewModel.onEvent(
-                                            ChatUiEvent.SendPrompt(
-                                                selectedDate,
-                                                bitmap
-                                            )
+                                            event =
+                                                ChatUiEvent.SendPrompt(
+                                                    prompt = selectedDate,
+                                                    bitmap = bitmap
+                                                )
                                         )
                                     }
                                 )
                             }
 
-                            "transfer" -> {
-                                TransferItem(amount, selectedDateMillis)
+                            TRANSFER_ACTION -> {
+                                TransferConfirmItem(
+                                    amount = amount,
+                                    selectedDateMillis = selectedDateMillis
+                                )
                             }
 
-                            "recipient" -> {
+                            TRANSFER_RECIPIENT -> {
                                 RecipientSelector(message = chat.message, onConfirm = { recipient ->
-                                    chatViewModel.onEvent(ChatUiEvent.SendPrompt(recipient, bitmap))
+                                    chatViewModel.onEvent(
+                                        event = ChatUiEvent.SendPrompt(
+                                            prompt = recipient,
+                                            bitmap = bitmap
+                                        )
+                                    )
                                 })
                             }
 
                             else -> {
-                                ModelChatItem(chat.prompt)
+                                ModelChatItem(prompt = chat.prompt)
                             }
                         }
                     }
@@ -397,374 +362,5 @@ fun ModelChatItem(prompt: String) {
                 .background(MaterialTheme.colorScheme.tertiary)
                 .padding(16.dp)
         )
-    }
-}
-
-@Composable
-fun ChatActionSelector(
-    message: String,
-    defaultSelected: String = "transfer",
-    onConfirm: (String) -> Unit
-) {
-    var selectedAction by remember { mutableStateOf(defaultSelected) }
-    var confirmed by remember { mutableStateOf(false) }
-
-    if (!confirmed) {
-        Column(
-            modifier = Modifier
-                .padding(end = 100.dp, bottom = 22.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(MaterialTheme.colorScheme.tertiary)
-                .padding(16.dp)
-        ) {
-            Text(
-                text = message,
-                color = MaterialTheme.colorScheme.onTertiary,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Medium,
-                modifier = Modifier.padding(bottom = 12.dp)
-            )
-
-            val options = listOf(
-                Triple("transfer", "Transfer", R.drawable.ic_transfer),
-                Triple("bill_pay", "Bill Pay", R.drawable.ic_bill_pay),
-                Triple("zelle", "Zelle", R.drawable.ic_zelle),
-                Triple("wire_transfer", "Wire Transfer", R.drawable.ic_wire_transfer)
-            )
-
-            options.forEach { (value, label, iconRes) ->
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 6.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(
-                            if (selectedAction == value)
-                                MaterialTheme.colorScheme.onPrimary
-                            else
-                                MaterialTheme.colorScheme.surface
-                        )
-                        .clickable { selectedAction = value }
-                        .padding(12.dp)
-                ) {
-                    RadioButton(
-                        selected = selectedAction == value,
-                        onClick = { selectedAction = value },
-                        colors = RadioButtonDefaults.colors(
-                            selectedColor = MaterialTheme.colorScheme.primary
-                        )
-                    )
-
-                    Spacer(modifier = Modifier.width(8.dp))
-
-                    Image(
-                        painter = painterResource(id = iconRes),
-                        contentDescription = "$label icon",
-                        modifier = Modifier
-                            .size(24.dp)
-                            .padding(end = 8.dp)
-                    )
-
-                    Text(
-                        text = label,
-                        fontSize = 15.sp,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-            }
-
-            Button(
-                onClick = {
-                    confirmed = true
-                    onConfirm(selectedAction)
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 16.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary
-                )
-            ) {
-                Text(text = "Confirm", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
-            }
-        }
-    }
-}
-
-@Composable
-fun RecipientSelector(
-    message: String,
-    onConfirm: (String) -> Unit
-) {
-    val recipients = listOf(
-        "Sam" to "•••7801",
-        "Tim" to "•••8012"
-    )
-
-    var selectedRecipient by remember { mutableStateOf(recipients.first().first) }
-    var confirmed by remember { mutableStateOf(false) }
-
-    if (!confirmed) {
-        Column(
-            modifier = Modifier
-                .padding(end = 100.dp, bottom = 22.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(MaterialTheme.colorScheme.tertiary)
-                .padding(16.dp)
-        ) {
-            Text(
-                text = message,
-                color = MaterialTheme.colorScheme.onTertiary,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Medium,
-                modifier = Modifier.padding(bottom = 12.dp)
-            )
-
-            recipients.forEach { (name, account) ->
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 6.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(
-                            if (selectedRecipient == name)
-                                MaterialTheme.colorScheme.onPrimary
-                            else
-                                MaterialTheme.colorScheme.surface
-                        )
-                        .clickable { selectedRecipient = name }
-                        .padding(12.dp)
-                ) {
-                    RadioButton(
-                        selected = selectedRecipient == name,
-                        onClick = { selectedRecipient = name },
-                        colors = RadioButtonDefaults.colors(
-                            selectedColor = MaterialTheme.colorScheme.primary
-                        )
-                    )
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Column {
-                        Text(
-                            text = name.replaceFirstChar { it.uppercase() },
-                            fontSize = 15.sp,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            fontWeight = FontWeight.Medium
-                        )
-                        Text(
-                            text = "Acct: $account",
-                            fontSize = 13.sp,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                        )
-                    }
-                }
-            }
-
-            Button(
-                onClick = {
-                    confirmed = true
-                    onConfirm(selectedRecipient)
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 16.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary
-                )
-            ) {
-                Text(text = "Confirm", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
-            }
-        }
-    }
-}
-
-@Composable
-fun AccountSelector(label: String, accountName: String, balance: String, accountNumber: String) {
-    Row {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp)
-                .clickable { /*TODO: Handle Account Selection*/ },
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(
-                text = "$label:",
-                fontSize = 20.sp,
-                color = Color.White,
-                modifier = Modifier.padding(start = 16.dp)
-            )
-            Text(
-                text = "$accountName   $balance",
-                fontSize = 20.sp,
-                color = Color.White,
-                modifier = Modifier.padding(end = 16.dp)
-            )
-        }
-    }
-}
-
-@RequiresApi(Build.VERSION_CODES.O)
-@Composable
-fun TransferItem(amount: String, selectedDateMillis: Long?) {
-    val rawAmount = amount // e.g., "1121"
-    val formattedAmount = rawAmount.toDoubleOrNull()?.div(100)
-        ?.let { String.format(Locale.US, "%.2f", it) } ?: "0.00"
-    val formattedDate = selectedDateMillis?.let {
-        Instant.ofEpochMilli(it)
-            .atZone(ZoneId.systemDefault())
-            .toLocalDate()
-            .format(DateTimeFormatter.ofPattern("MM/dd/yyyy"))
-    } ?: ""
-    Column(
-        modifier = Modifier
-            .wrapContentSize()
-            .padding(16.dp)
-            .clip(RoundedCornerShape(16.dp)) // Rounded corners
-            .background(MaterialTheme.colorScheme.tertiary)
-            .padding(16.dp), // Inner padding after background
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Text(
-            text = "\uD83C\uDF89 $${formattedAmount}\uD83C\uDF89",
-            fontSize = 48.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.White,
-            modifier = Modifier.padding(bottom = 8.dp)
-        )
-        AccountSelector("From", "Truist Savings", "$3500", "•7801")
-        AccountSelector("To", "Sahil Checking", "$3500", "•8012")
-        Spacer(modifier = Modifier.height(8.dp))
-        AccountSelector("Date", formattedDate, "", "")
-
-        Button(
-            onClick = { /*TODO: Handle Next*/ },
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color.White,
-                contentColor = Color.Black
-            ),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp)
-        ) {
-            Text(text = "Confirm", fontSize = 25.sp)
-        }
-    }
-}
-
-@Composable
-fun AmountInputField(
-    message: String,
-    amount: String,
-    onAmountChange: (String) -> Unit,
-    onAmountSubmitted: (String) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val keyboardController = LocalSoftwareKeyboardController.current
-
-    Column(
-        modifier = modifier
-            .padding(end = 100.dp, bottom = 22.dp)
-            .clip(RoundedCornerShape(12.dp))
-            .background(MaterialTheme.colorScheme.tertiary)
-            .padding(16.dp)
-    ) {
-        Text(
-            text = message,
-            color = Color.White,
-            modifier = Modifier.padding(bottom = 12.dp)
-        )
-
-        TextField(
-            modifier = Modifier.clip(RoundedCornerShape(12.dp)),
-            value = amount,
-            onValueChange = {
-                if (it.length <= 6 && it.all { char -> char.isDigit() }) {
-                    onAmountChange(it)
-                }
-            },
-            visualTransformation = CurrencyAmountInputVisualTransformation(
-                fixedCursorAtTheEnd = true
-            ),
-            keyboardOptions = KeyboardOptions.Default.copy(
-                keyboardType = KeyboardType.Number,
-                imeAction = ImeAction.Done
-            ),
-            keyboardActions = KeyboardActions(
-                onDone = {
-                    val numericAmount = amount.toDoubleOrNull()?.div(100)
-                    numericAmount?.let {
-                        onAmountSubmitted(String.format(Locale.US, "%.2f", it))
-                    }
-                    keyboardController?.hide()
-                }
-            ),
-            singleLine = true
-        )
-    }
-}
-
-@RequiresApi(Build.VERSION_CODES.O)
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun DateInputField(
-    message: String,
-    selectedDateMillis: Long?,
-    onDateChange: (Long?) -> Unit,
-    onDateSubmitted: (String) -> Unit,
-    @SuppressLint("ModifierParameter") modifier: Modifier = Modifier
-) {
-    val state = rememberDatePickerState(
-        initialSelectedDateMillis = selectedDateMillis,
-        initialDisplayMode = DisplayMode.Input
-    )
-
-    // Sync selected date with parent state
-    LaunchedEffect(state.selectedDateMillis) {
-        onDateChange(state.selectedDateMillis)
-    }
-
-    Column(
-        modifier = modifier
-            .padding(end = 100.dp, bottom = 22.dp)
-            .clip(RoundedCornerShape(12.dp))
-            .background(MaterialTheme.colorScheme.tertiary)
-            .padding(16.dp)
-    ) {
-        Text(
-            text = message,
-            color = Color.White,
-            modifier = Modifier.padding(bottom = 12.dp)
-        )
-
-        DatePicker(
-            state = state,
-            modifier = Modifier.clip(RoundedCornerShape(12.dp)),
-            showModeToggle = false
-        )
-
-        Button(
-            onClick = {
-                val formattedDate = selectedDateMillis?.let { millis ->
-                    Instant.ofEpochMilli(millis)
-                        .atZone(ZoneId.systemDefault())
-                        .toLocalDate()
-                        .format(DateTimeFormatter.ofPattern("MM/dd/yyyy"))
-                }
-                if (formattedDate != null) {
-                    onDateSubmitted(formattedDate)
-                }
-            },
-            modifier = Modifier
-                .align(Alignment.End)
-                .padding(top = 16.dp)
-        ) {
-            Text(text = "Ok")
-        }
     }
 }

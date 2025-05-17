@@ -16,6 +16,24 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.json.JSONObject
 
+const val TRANSFER_ACTION = "transfer"
+
+const val ACTION = "action"
+
+const val TRANSFER_AMOUNT = "amount"
+
+const val TRANSFER_DATE = "date"
+
+const val TRANSFER_RECIPIENT = "recipient"
+
+private const val USER = "user"
+
+private const val SYSTEM = "system"
+
+private const val NEXT = "next"
+
+private const val MESSAGE = "message"
+
 class ChatViewModel : ViewModel() {
     private val repository: ChatRepository = ChatRepository()
     private val _chatState = MutableStateFlow(ChatState())
@@ -25,7 +43,7 @@ class ChatViewModel : ViewModel() {
     private val _conversationHistory = MutableStateFlow(
         listOf(
             Message(
-                role = "system",
+                role = SYSTEM,
                 content = getBankGptPrompt().trimIndent()
             )
         )
@@ -35,7 +53,7 @@ class ChatViewModel : ViewModel() {
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading
 
-    fun setLoading(value: Boolean) {
+    private fun setLoading(value: Boolean) {
         _isLoading.value = value
     }
 
@@ -67,7 +85,7 @@ class ChatViewModel : ViewModel() {
 
     private fun addPrompt(prompt: String, bitmap: Bitmap?) {
         // Add user's prompt to conversation history
-        addToHistory(Message(role = "user", content = prompt))
+        addToHistory(Message(role = USER, content = prompt))
 
         _chatState.update {
             it.copy(
@@ -96,8 +114,8 @@ class ChatViewModel : ViewModel() {
     private fun handleAssistantResponse(content: String) {
         try {
             val jsonResponse = JSONObject(content)
-            val next = jsonResponse.getString("next")
-            val message = jsonResponse.optString("message", "") // default to empty if not present
+            val next = jsonResponse.getString(NEXT)
+            val message = jsonResponse.optString(MESSAGE, "") // default to empty if not present
 
             val chat = Chat(
                 prompt = content,

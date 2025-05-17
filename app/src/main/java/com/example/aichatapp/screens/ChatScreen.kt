@@ -75,6 +75,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -210,13 +211,14 @@ fun ChatScreen(
                     Column {
                         when (chat.type) {
                             "action" -> {
-                                ChatActionSelector(onConfirm = { action ->
+                                ChatActionSelector(message = chat.message, onConfirm = { action ->
                                     chatViewModel.onEvent(ChatUiEvent.SendPrompt(action, bitmap))
                                 })
                             }
 
                             "amount" -> {
                                 AmountInputField(
+                                    message = chat.message,
                                     amount = amount,
                                     onAmountChange = { amount = it },
                                     onAmountSubmitted = { enteredAmount ->
@@ -232,6 +234,7 @@ fun ChatScreen(
 
                             "date" -> {
                                 DateInputField(
+                                    message = chat.message,
                                     selectedDateMillis = selectedDateMillis,
                                     onDateChange = { selectedDateMillis = it },
                                     onDateSubmitted = { selectedDate ->
@@ -250,7 +253,7 @@ fun ChatScreen(
                             }
 
                             "recipient" -> {
-                                RecipientSelector(onConfirm = { recipient ->
+                                RecipientSelector(message = chat.message, onConfirm = { recipient ->
                                     chatViewModel.onEvent(ChatUiEvent.SendPrompt(recipient, bitmap))
                                 })
                             }
@@ -399,6 +402,7 @@ fun ModelChatItem(prompt: String) {
 
 @Composable
 fun ChatActionSelector(
+    message: String,
     defaultSelected: String = "transfer",
     onConfirm: (String) -> Unit
 ) {
@@ -414,7 +418,7 @@ fun ChatActionSelector(
                 .padding(16.dp)
         ) {
             Text(
-                text = "Which type of transaction would you like to make?",
+                text = message,
                 color = MaterialTheme.colorScheme.onTertiary,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Medium,
@@ -422,13 +426,13 @@ fun ChatActionSelector(
             )
 
             val options = listOf(
-                "transfer" to "Transfer",
-                "bill_pay" to "Bill Pay",
-                "zelle" to "Zelle",
-                "wire_transfer" to "Wire Transfer"
+                Triple("transfer", "Transfer", R.drawable.ic_transfer),
+                Triple("bill_pay", "Bill Pay", R.drawable.ic_bill_pay),
+                Triple("zelle", "Zelle", R.drawable.ic_zelle),
+                Triple("wire_transfer", "Wire Transfer", R.drawable.ic_wire_transfer)
             )
 
-            options.forEach { (value, label) ->
+            options.forEach { (value, label, iconRes) ->
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
@@ -451,7 +455,17 @@ fun ChatActionSelector(
                             selectedColor = MaterialTheme.colorScheme.primary
                         )
                     )
-                    Spacer(modifier = Modifier.width(12.dp))
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    Image(
+                        painter = painterResource(id = iconRes),
+                        contentDescription = "$label icon",
+                        modifier = Modifier
+                            .size(24.dp)
+                            .padding(end = 8.dp)
+                    )
+
                     Text(
                         text = label,
                         fontSize = 15.sp,
@@ -481,6 +495,7 @@ fun ChatActionSelector(
 
 @Composable
 fun RecipientSelector(
+    message: String,
     onConfirm: (String) -> Unit
 ) {
     val recipients = listOf(
@@ -500,7 +515,7 @@ fun RecipientSelector(
                 .padding(16.dp)
         ) {
             Text(
-                text = "Who would you like to send money to?",
+                text = message,
                 color = MaterialTheme.colorScheme.onTertiary,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Medium,
@@ -644,6 +659,7 @@ fun TransferItem(amount: String, selectedDateMillis: Long?) {
 
 @Composable
 fun AmountInputField(
+    message: String,
     amount: String,
     onAmountChange: (String) -> Unit,
     onAmountSubmitted: (String) -> Unit,
@@ -656,17 +672,16 @@ fun AmountInputField(
             .padding(end = 100.dp, bottom = 22.dp)
             .clip(RoundedCornerShape(12.dp))
             .background(MaterialTheme.colorScheme.tertiary)
+            .padding(16.dp)
     ) {
         Text(
-            text = "Please enter amount:",
+            text = message,
             color = Color.White,
-            modifier = Modifier.padding(start = 16.dp, top = 5.dp)
+            modifier = Modifier.padding(bottom = 12.dp)
         )
 
         TextField(
-            modifier = Modifier
-                .padding(bottom = 16.dp, start = 16.dp, end = 16.dp)
-                .clip(RoundedCornerShape(12.dp)),
+            modifier = Modifier.clip(RoundedCornerShape(12.dp)),
             value = amount,
             onValueChange = {
                 if (it.length <= 6 && it.all { char -> char.isDigit() }) {
@@ -698,6 +713,7 @@ fun AmountInputField(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DateInputField(
+    message: String,
     selectedDateMillis: Long?,
     onDateChange: (Long?) -> Unit,
     onDateSubmitted: (String) -> Unit,
@@ -718,18 +734,17 @@ fun DateInputField(
             .padding(end = 100.dp, bottom = 22.dp)
             .clip(RoundedCornerShape(12.dp))
             .background(MaterialTheme.colorScheme.tertiary)
+            .padding(16.dp)
     ) {
         Text(
-            text = "Please select a date:",
+            text = message,
             color = Color.White,
-            modifier = Modifier.padding(start = 16.dp, top = 5.dp)
+            modifier = Modifier.padding(bottom = 12.dp)
         )
 
         DatePicker(
             state = state,
-            modifier = Modifier
-                .padding(16.dp)
-                .clip(RoundedCornerShape(12.dp)),
+            modifier = Modifier.clip(RoundedCornerShape(12.dp)),
             showModeToggle = false
         )
 
@@ -747,7 +762,7 @@ fun DateInputField(
             },
             modifier = Modifier
                 .align(Alignment.End)
-                .padding(end = 16.dp, bottom = 16.dp)
+                .padding(top = 16.dp)
         ) {
             Text(text = "Ok")
         }

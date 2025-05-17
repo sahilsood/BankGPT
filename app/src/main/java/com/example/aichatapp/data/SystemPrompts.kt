@@ -51,11 +51,12 @@ fun getBankGptPrompt(user: String = "Sahil"): String {
 fun getTransferFlowInstructions(user: String): String {
     return """
         🔹 Transfer Flow:
-        ✅ If recipient not provided, ask: _"Who would you like to send the money to, $user?"_
+        ✅ If recipient not provided:
+        {"next": "recipient", "message": "Who would you like to send the money to, $user?"}
         ✅ After recipient:
         {"next": "amount", "message": "How much would you like to transfer?"}
         ✅ After amount:
-        {"next": "date", "message": "Please select the date for the transfer."}
+        {"next": "date", "message": "Please select the date for the transfer:"}
         ✅ After date:
         {
           "next": "transfer",

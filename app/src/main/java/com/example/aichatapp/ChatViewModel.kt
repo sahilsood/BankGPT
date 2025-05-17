@@ -96,115 +96,27 @@ class ChatViewModel : ViewModel() {
     private fun handleAssistantResponse(content: String) {
         try {
             val jsonResponse = JSONObject(content)
-            when (jsonResponse.getString("next")) {
-                "date" -> {
-                    _chatState.update {
-                        it.copy(
-                            chatList = it.chatList.toMutableList().apply {
-                                add(
-                                    0,
-                                    Chat(
-                                        prompt = content,
-                                        bitmap = null,
-                                        isFromUser = false,
-                                        type = "date"
-                                    )
-                                )
-                            }
-                        )
-                    }
-                }
+            val next = jsonResponse.getString("next")
+            val message = jsonResponse.optString("message", "") // default to empty if not present
 
-                "account" -> {
-                    // Trigger account picker UI
-                }
+            val chat = Chat(
+                prompt = content,
+                bitmap = null,
+                isFromUser = false,
+                type = next,
+                message = message
+            )
 
-                "action" -> {
-                    _chatState.update {
-                        it.copy(
-                            chatList = it.chatList.toMutableList().apply {
-                                add(
-                                    0,
-                                    Chat(
-                                        prompt = content,
-                                        bitmap = null,
-                                        isFromUser = false,
-                                        type = "action"
-                                    )
-                                )
-                            }
-                        )
+            _chatState.update {
+                it.copy(
+                    chatList = it.chatList.toMutableList().apply {
+                        add(0, chat)
                     }
-                }
-
-                "recipient" -> {
-                    _chatState.update {
-                        it.copy(
-                            chatList = it.chatList.toMutableList().apply {
-                                add(
-                                    0,
-                                    Chat(
-                                        prompt = content,
-                                        bitmap = null,
-                                        isFromUser = false,
-                                        type = "recipient"
-                                    )
-                                )
-                            }
-                        )
-                    }
-                }
-
-                "amount" -> {
-                    // Trigger amount text input field
-                    _chatState.update {
-                        it.copy(
-                            chatList = it.chatList.toMutableList().apply {
-                                add(
-                                    0,
-                                    Chat(
-                                        prompt = content,
-                                        bitmap = null,
-                                        isFromUser = false,
-                                        type = "amount"
-                                    )
-                                )
-                            }
-                        )
-                    }
-                }
-
-                "transfer" -> {
-                    _chatState.update {
-                        it.copy(
-                            chatList = it.chatList.toMutableList().apply {
-                                add(
-                                    0,
-                                    Chat(
-                                        prompt = content,
-                                        bitmap = null,
-                                        isFromUser = false,
-                                        type = "transfer_money"
-                                    )
-                                )
-                            }
-                        )
-                    }
-                }
-
-                else -> {
-                    // Handle other cases if needed
-                    _chatState.update {
-                        it.copy(
-                            chatList = it.chatList.toMutableList().apply {
-                                add(0, Chat(prompt = content, bitmap = null, isFromUser = false))
-                            }
-                        )
-                    }
-                }
+                )
             }
+
         } catch (e: Exception) {
-            // Handle other cases if needed
+            // Handle non-JSON or malformed content as a regular message
             _chatState.update {
                 it.copy(
                     chatList = it.chatList.toMutableList().apply {

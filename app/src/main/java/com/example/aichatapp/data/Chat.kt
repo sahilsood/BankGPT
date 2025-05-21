@@ -7,5 +7,6 @@ data class Chat(
     val bitmap:Bitmap? = null,
     val isFromUser: Boolean,
     val type: String = "text",
-    val message: String = ""
+    val message: String = "",
+    val selected: String = ""
 )

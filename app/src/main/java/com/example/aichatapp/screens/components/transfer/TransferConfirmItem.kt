@@ -28,20 +28,25 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.aichatapp.R
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
+@Preview
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun TransferConfirmItem(
-    amount: String,
-    selectedDateMillis: Long?,
-    logoPainter: Painter
+    amount: String = "10000",
+    selectedDateMillis: Long? = 100000L,
+    logoPainter: Painter = painterResource(id = R.drawable.ic_launcher_foreground),
+    onTransferConfirmed: (String) -> Unit = {}
 ) {
     val formattedAmount = amount.toDoubleOrNull()?.div(100)
         ?.let { String.format(Locale.US, "%.2f", it) } ?: "0.00"
@@ -52,10 +57,7 @@ fun TransferConfirmItem(
             .toLocalDate()
             .format(DateTimeFormatter.ofPattern("MM/dd/yyyy"))
     } ?: ""
-    Box(
-        modifier = Modifier
-            .padding(start = 16.dp, end = 100.dp, bottom = 22.dp)
-    ) {
+    Box(modifier = Modifier.padding(start = 16.dp, end = 100.dp, bottom = 22.dp)) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -88,7 +90,7 @@ fun TransferConfirmItem(
             AccountSelector("Date", formattedDate, "", "")
 
             Button(
-                onClick = { /* TODO: Handle next */ },
+                onClick = { onTransferConfirmed("confirm") },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary

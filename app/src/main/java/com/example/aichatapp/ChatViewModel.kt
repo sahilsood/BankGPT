@@ -115,14 +115,16 @@ class ChatViewModel : ViewModel() {
         try {
             val jsonResponse = JSONObject(content)
             val next = jsonResponse.getString(NEXT)
-            val message = jsonResponse.optString(MESSAGE, "") // default to empty if not present
+            val message = jsonResponse.optString(MESSAGE, "")
+            val selected = jsonResponse.optString("selected", "")
 
             val chat = Chat(
                 prompt = content,
                 bitmap = null,
                 isFromUser = false,
                 type = next,
-                message = message
+                message = message,
+                selected = selected
             )
 
             _chatState.update {

@@ -177,6 +177,7 @@ fun ChatScreen(
                                             )
                                         )
                                     },
+                                    defaultSelected = chat.selected,
                                     logoPainter = painterResource(R.drawable.bank_logo)
                                 )
                             }
@@ -222,7 +223,14 @@ fun ChatScreen(
                                     amount = amount,
                                     selectedDateMillis = selectedDateMillis,
                                     logoPainter = painterResource(R.drawable.bank_logo)
-                                )
+                                ) {
+                                    chatViewModel.onEvent(
+                                        event = ChatUiEvent.SendPrompt(
+                                            prompt = it,
+                                            bitmap = bitmap
+                                        )
+                                    )
+                                }
                             }
 
                             TRANSFER_RECIPIENT -> {

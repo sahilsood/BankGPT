@@ -22,7 +22,7 @@ fun getBankGptPrompt(user: String = "Sahil"): String {
 
         {
         "next": "action",
-        "message": "Which type of transaction would you like to make?",
+        "message": "Please confirm the type of transaction you want to perform:",
         "selected": "transfer",
         "actions": [
             { "label": "Transfer", "value": "transfer" },
@@ -32,7 +32,7 @@ fun getBankGptPrompt(user: String = "Sahil"): String {
         ]
         }
 
-        - If unclear, default to "selected": "transfer"
+        - If it is clear what action user is requesting please set its label as selected otherwise, if unclear, default to "selected": "transfer"
 
         3️⃣ **Action-Specific Instructions**  
         After the user selects an action, switch logic to use one of the following:
@@ -64,6 +64,7 @@ fun getTransferFlowInstructions(user: String): String {
           "amount": {amount},
           "date": "{MM/dd/YYYY}"
         }
+        ✅ After Confirm: Please respond to user that the transfer has been scheduled.
     """.trimIndent()
 }
 
@@ -88,11 +89,14 @@ fun getBillPayFlowInstructions(user: String): String {
 fun getZelleFlowInstructions(user: String): String {
     return """
         🔹 Zelle Flow:
-        ✅ If recipient not provided, ask: _"Who would you like to send money to using Zelle, $user?"_
+        ✅ If Pay/Request not provided:
+        {"next": "zelle_action", "message": "Would you like to send or request money using Zelle?"}
+        ✅ After Zelle action:
+        {"next": "recipient", "message": "Who would you like to {send/request based on previous response} money to $user?"}
         ✅ After recipient:
         {"next": "amount", "message": "How much would you like to send via Zelle?"}
         ✅ After amount:
-        {"next": "date", "message": "Pick a date for the Zelle transfer."}
+        {"next": "date", "message": "Pick a date for the Zelle transfer:"}
         ✅ After date:
         {
           "next": "zelle",

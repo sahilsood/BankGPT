@@ -1,5 +1,6 @@
 package com.example.aichatapp.screens
 
+import PayRequestOptions
 import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Build
@@ -245,6 +246,22 @@ fun ChatScreen(
                                     },
                                     logoPainter = painterResource(R.drawable.bank_logo)
                                 )
+                            }
+
+                            "zelle_action" -> {
+                                PayRequestOptions(
+                                    message = chat.message,
+                                    payIcon = painterResource(id = R.drawable.send),
+                                    requestIcon = painterResource(id = R.drawable.recieve),
+                                    logoPainter = painterResource(R.drawable.bank_logo)
+                                ) {
+                                    chatViewModel.onEvent(
+                                        event = ChatUiEvent.SendPrompt(
+                                            prompt = it,
+                                            bitmap = bitmap
+                                        )
+                                    )
+                                }
                             }
 
                             else -> {

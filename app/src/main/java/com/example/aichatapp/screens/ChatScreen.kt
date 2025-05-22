@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.absoluteOffset
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -151,12 +152,12 @@ fun ChatScreen(
     val chatViewModel = viewModel<ChatViewModel>()
     val chatState = chatViewModel.chatState.collectAsState().value
     var amount by remember { mutableStateOf("") }
-    var selectedDateMillis by remember { mutableStateOf<Long?>(null) }
     val bitmap = getBitmap(uriState = uriState)
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(paddingValues)
+            .imePadding()
     ) {
         LazyColumn(
             modifier = Modifier
@@ -193,11 +194,10 @@ fun ChatScreen(
                                     onAmountChange = { amount = it },
                                     onAmountSubmitted = { enteredAmount ->
                                         chatViewModel.onEvent(
-                                            event =
-                                                ChatUiEvent.SendPrompt(
-                                                    prompt = enteredAmount,
-                                                    bitmap = bitmap
-                                                )
+                                            event = ChatUiEvent.SendPrompt(
+                                                prompt = enteredAmount,
+                                                bitmap = bitmap
+                                            )
                                         )
                                     },
                                     logoPainter = painterResource(R.drawable.bank_logo)
@@ -207,15 +207,12 @@ fun ChatScreen(
                             TRANSFER_DATE -> {
                                 DateInputField(
                                     message = chat.message,
-                                    selectedDateMillis = selectedDateMillis,
-                                    onDateChange = { selectedDateMillis = it },
                                     onDateSubmitted = { selectedDate ->
                                         chatViewModel.onEvent(
-                                            event =
-                                                ChatUiEvent.SendPrompt(
-                                                    prompt = selectedDate,
-                                                    bitmap = bitmap
-                                                )
+                                            event = ChatUiEvent.SendPrompt(
+                                                prompt = selectedDate,
+                                                bitmap = bitmap
+                                            )
                                         )
                                     },
                                     logoPainter = painterResource(R.drawable.bank_logo)
@@ -224,10 +221,11 @@ fun ChatScreen(
 
                             TRANSFER_CONFIRM, ZELLE_CONFIRM -> {
                                 TransferConfirmItem(
-                                    amount = amount,
+                                    amount = chat.amount,
+                                    recipient = chat.recipient,
+                                    date = chat.date,
                                     message = chat.message,
-                                    selectedDateMillis = selectedDateMillis,
-                                    logoPainter = painterResource(R.drawable.bank_logo)
+                                    logoPainter = painterResource(R.drawable.bank_logo),
                                 ) {
                                     chatViewModel.onEvent(
                                         event = ChatUiEvent.SendPrompt(

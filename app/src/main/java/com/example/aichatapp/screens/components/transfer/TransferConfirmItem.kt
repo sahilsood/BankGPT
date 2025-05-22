@@ -34,9 +34,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.aichatapp.R
-import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 @Preview
@@ -44,20 +41,12 @@ import java.util.Locale
 @Composable
 fun TransferConfirmItem(
     amount: String = "10000",
+    recipient: String = "John Doe",
+    date: String = "12/05/2023",
     message: String = "Select an option:",
-    selectedDateMillis: Long? = 100000L,
     logoPainter: Painter = painterResource(id = R.drawable.ic_launcher_foreground),
     onTransferConfirmed: (String) -> Unit = {}
 ) {
-    val formattedAmount = amount.toDoubleOrNull()?.div(100)
-        ?.let { String.format(Locale.US, "%.2f", it) } ?: "0.00"
-
-    val formattedDate = selectedDateMillis?.let {
-        Instant.ofEpochMilli(it)
-            .atZone(ZoneId.systemDefault())
-            .toLocalDate()
-            .format(DateTimeFormatter.ofPattern("MM/dd/yyyy"))
-    } ?: ""
     Box(modifier = Modifier.padding(start = 16.dp, end = 100.dp, bottom = 22.dp)) {
         Column(
             modifier = Modifier
@@ -78,17 +67,17 @@ fun TransferConfirmItem(
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                text = "\uD83C\uDF89 $$formattedAmount \uD83C\uDF89",
+                text = "\uD83C\uDF89 $$amount \uD83C\uDF89",
                 fontSize = 48.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.White,
                 modifier = Modifier.padding(bottom = 8.dp)
             )
 
-            AccountSelector("From", "Truist Savings", "$3500", "•7801")
-            AccountSelector("To", "Sahil Checking", "$3500", "•8012")
+            AccountSelector("From", "Truist Savings", "", "•7801")
+            AccountSelector("To", recipient, "", "•8012")
             Spacer(modifier = Modifier.height(8.dp))
-            AccountSelector("Date", formattedDate, "", "")
+            AccountSelector("Date", date, "", "")
 
             Button(
                 onClick = { onTransferConfirmed("confirm") },

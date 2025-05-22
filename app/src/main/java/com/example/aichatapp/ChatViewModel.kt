@@ -24,11 +24,17 @@ const val ACTION = "action"
 
 const val ZELLE_ACTION = "zelle_action"
 
-const val TRANSFER_AMOUNT = "amount"
+private const val AMOUNT = "amount"
 
-const val TRANSFER_DATE = "date"
+const val TRANSFER_AMOUNT = AMOUNT
 
-const val TRANSFER_RECIPIENT = "recipient"
+private const val DATE = "date"
+
+const val TRANSFER_DATE = DATE
+
+private const val RECIPIENT = "recipient"
+
+const val TRANSFER_RECIPIENT = RECIPIENT
 
 const val ZELLE_RECIPIENT = "zelle_recipient"
 
@@ -39,6 +45,8 @@ private const val SYSTEM = "system"
 private const val NEXT = "next"
 
 private const val MESSAGE = "message"
+
+private const val SELECTED = "selected"
 
 class ChatViewModel : ViewModel() {
     private val repository: ChatRepository = ChatRepository()
@@ -63,7 +71,6 @@ class ChatViewModel : ViewModel() {
         _isLoading.value = value
     }
 
-    // Adds a message to history
     private fun addToHistory(message: Message) {
         _conversationHistory.value += message
     }
@@ -122,7 +129,10 @@ class ChatViewModel : ViewModel() {
             val jsonResponse = JSONObject(content)
             val next = jsonResponse.getString(NEXT)
             val message = jsonResponse.optString(MESSAGE, "")
-            val selected = jsonResponse.optString("selected", "")
+            val selected = jsonResponse.optString(SELECTED, "")
+            val recipient = jsonResponse.optString(RECIPIENT, "")
+            val amount = jsonResponse.optString(AMOUNT, "")
+            val date = jsonResponse.optString(DATE, "")
 
             val chat = Chat(
                 prompt = content,
@@ -130,7 +140,10 @@ class ChatViewModel : ViewModel() {
                 isFromUser = false,
                 type = next,
                 message = message,
-                selected = selected
+                selected = selected,
+                recipient = recipient,
+                amount = amount,
+                date = date
             )
 
             _chatState.update {

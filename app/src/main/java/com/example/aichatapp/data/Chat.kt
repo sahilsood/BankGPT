@@ -8,5 +8,8 @@ data class Chat(
     val isFromUser: Boolean,
     val type: String = "text",
     val message: String = "",
-    val selected: String = ""
+    val selected: String = "",
+    val recipient: String = "",
+    val amount: String = "",
+    val date: String = ""
 )

@@ -56,14 +56,14 @@ fun getTransferFlowInstructions(user: String): String {
         ✅ After recipient:
         {"next": "amount", "message": "How much would you like to transfer?"}
         ✅ After amount:
-        {"next": "date", "message": "Please select the date for the transfer:"}
+        {"next": "date", "message": "Please enter the date for the transfer:"}
         ✅ After date:
         {
           "next": "transfer",
           "recipient": "{recipient_name}",
           "amount": {amount},
           "date": "{MM/dd/YYYY}",
-          "message": "Please confirm your Zelle transfer:"
+          "message": "Please confirm your Transfer:"
         }
         ✅ After Confirm: Please respond to user that the transfer has been scheduled.
     """.trimIndent()
@@ -97,7 +97,7 @@ fun getZelleFlowInstructions(user: String): String {
         ✅ After recipient:
         {"next": "amount", "message": "How much would you like to send via Zelle?"}
         ✅ After amount:
-        {"next": "date", "message": "Pick a date for the Zelle transfer:"}
+        {"next": "date", "message": "Please enter the date for the Zelle transfer:"}
         ✅ After date:
         {
           "next": "zelle",

@@ -1,32 +1,15 @@
 package com.example.aichatapp.screens.components.transfer
 
-import android.annotation.SuppressLint
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.absoluteOffset
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DisplayMode
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.rememberDatePickerState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -44,21 +27,24 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun DateInputField(
     message: String,
-    selectedDateMillis: Long?,
-    onDateChange: (Long?) -> Unit,
     onDateSubmitted: (String) -> Unit,
-    logoPainter: Painter,
-    @SuppressLint("ModifierParameter") modifier: Modifier = Modifier
+    logoPainter: Painter
 ) {
+
+    val todayMillis = remember {
+        Instant.now()
+            .atZone(ZoneId.systemDefault())
+            .toLocalDate()
+            .atStartOfDay(ZoneId.systemDefault())
+            .toInstant()
+            .toEpochMilli()
+    }
+
     val state = rememberDatePickerState(
-        initialSelectedDateMillis = selectedDateMillis,
+        initialSelectedDateMillis = todayMillis,
         initialDisplayMode = DisplayMode.Input
     )
 
-    // Sync selected date with parent state
-    LaunchedEffect(state.selectedDateMillis) {
-        onDateChange(state.selectedDateMillis)
-    }
     Box(
         modifier = Modifier
             .padding(start = 16.dp, end = 100.dp, bottom = 22.dp)
@@ -87,14 +73,13 @@ fun DateInputField(
 
             Button(
                 onClick = {
-                    val formattedDate = state.selectedDateMillis?.let { millis ->
-                        Instant.ofEpochMilli(millis)
+                    state.selectedDateMillis?.let { millis ->
+                        val localDate = Instant.ofEpochMilli(millis)
                             .atZone(ZoneId.systemDefault())
                             .toLocalDate()
-                            .format(DateTimeFormatter.ofPattern("MM/dd/yyyy"))
-                    }
-                    if (formattedDate != null) {
-                        onDateSubmitted(formattedDate)
+                            .plusDays(1)
+                        val formatted = localDate.format(DateTimeFormatter.ofPattern("MM/dd/yyyy"))
+                        onDateSubmitted(formatted)
                     }
                 },
                 modifier = Modifier
@@ -105,7 +90,6 @@ fun DateInputField(
             }
         }
 
-        // Bank logo at top-left, half-outside the bubble
         Image(
             painter = logoPainter,
             contentDescription = "Bank Logo",

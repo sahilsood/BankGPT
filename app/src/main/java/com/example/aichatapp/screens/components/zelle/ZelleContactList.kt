@@ -55,17 +55,17 @@ fun ZelleContactList(
                 horizontalArrangement = Arrangement.SpaceEvenly,
             ) {
                 ZelleContactItem(
-                    "B",
-                    "Bhavya HU",
-                    "732-875-8536",
+                    "H",
+                    "Han S",
+                    "253-473-6753",
                     painterResource(id = R.drawable.ic_zelle)
                 ) {
                     onOptionSelected(it)
                 }
                 ZelleContactItem(
-                    "D",
-                    "Devraj Uncc",
-                    "848-248-1406",
+                    "L",
+                    "Luke S",
+                    "234-152-3532",
                     painterResource(id = R.drawable.ic_zelle)
                 ) {
                     onOptionSelected(it)
@@ -90,8 +90,8 @@ fun ZelleContactList(
 @Composable
 fun ZelleContactItem(
     initial: String = "B",
-    name: String = "Bhavya HU",
-    phone: String = "732-875-8536",
+    name: String = "Luke S",
+    phone: String = "732-123-7895",
     zelleIcon: Painter = painterResource(id = R.drawable.ic_zelle),
     onClick: (String) -> Unit = {}
 ) {
@@ -138,14 +138,14 @@ fun ZelleContactItem(
         Text(
             text = name,
             color = MaterialTheme.colorScheme.onTertiary,
-            fontSize = 14.sp,
+            fontSize = 16.sp,
             fontWeight = FontWeight.Medium
         )
 
         Text(
             text = phone,
             color = MaterialTheme.colorScheme.onTertiary,
-            fontSize = 12.sp
+            fontSize = 14.sp
         )
     }
 }

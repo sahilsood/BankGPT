@@ -16,15 +16,21 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.json.JSONObject
 
-const val TRANSFER_ACTION = "transfer"
+const val TRANSFER_CONFIRM = "transfer"
+
+const val ZELLE_CONFIRM = "zelle"
 
 const val ACTION = "action"
+
+const val ZELLE_ACTION = "zelle_action"
 
 const val TRANSFER_AMOUNT = "amount"
 
 const val TRANSFER_DATE = "date"
 
 const val TRANSFER_RECIPIENT = "recipient"
+
+const val ZELLE_RECIPIENT = "zelle_recipient"
 
 private const val USER = "user"
 

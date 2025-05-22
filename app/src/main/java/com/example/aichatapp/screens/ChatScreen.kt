@@ -22,7 +22,6 @@ import androidx.compose.foundation.layout.absoluteOffset
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -75,9 +74,12 @@ import com.example.aichatapp.ACTION
 import com.example.aichatapp.TRANSFER_AMOUNT
 import com.example.aichatapp.ChatViewModel
 import com.example.aichatapp.R
-import com.example.aichatapp.TRANSFER_ACTION
+import com.example.aichatapp.TRANSFER_CONFIRM
 import com.example.aichatapp.TRANSFER_DATE
 import com.example.aichatapp.TRANSFER_RECIPIENT
+import com.example.aichatapp.ZELLE_ACTION
+import com.example.aichatapp.ZELLE_CONFIRM
+import com.example.aichatapp.ZELLE_RECIPIENT
 import com.example.aichatapp.data.ChatUiEvent
 import com.example.aichatapp.screens.components.ChatActionSelector
 import com.example.aichatapp.screens.components.TypingDots
@@ -85,6 +87,7 @@ import com.example.aichatapp.screens.components.transfer.AmountInputField
 import com.example.aichatapp.screens.components.transfer.DateInputField
 import com.example.aichatapp.screens.components.transfer.RecipientSelector
 import com.example.aichatapp.screens.components.transfer.TransferConfirmItem
+import com.example.aichatapp.screens.components.zelle.ZelleContactList
 import com.example.aichatapp.ui.theme.Purple40
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
@@ -219,9 +222,10 @@ fun ChatScreen(
                                 )
                             }
 
-                            TRANSFER_ACTION -> {
+                            TRANSFER_CONFIRM, ZELLE_CONFIRM -> {
                                 TransferConfirmItem(
                                     amount = amount,
+                                    message = chat.message,
                                     selectedDateMillis = selectedDateMillis,
                                     logoPainter = painterResource(R.drawable.bank_logo)
                                 ) {
@@ -248,11 +252,25 @@ fun ChatScreen(
                                 )
                             }
 
-                            "zelle_action" -> {
+                            ZELLE_ACTION -> {
                                 PayRequestOptions(
                                     message = chat.message,
                                     payIcon = painterResource(id = R.drawable.send),
                                     requestIcon = painterResource(id = R.drawable.recieve),
+                                    logoPainter = painterResource(R.drawable.bank_logo)
+                                ) {
+                                    chatViewModel.onEvent(
+                                        event = ChatUiEvent.SendPrompt(
+                                            prompt = it,
+                                            bitmap = bitmap
+                                        )
+                                    )
+                                }
+                            }
+
+                            ZELLE_RECIPIENT -> {
+                                ZelleContactList(
+                                    message = chat.message,
                                     logoPainter = painterResource(R.drawable.bank_logo)
                                 ) {
                                     chatViewModel.onEvent(

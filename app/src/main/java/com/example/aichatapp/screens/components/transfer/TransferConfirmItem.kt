@@ -44,6 +44,7 @@ import java.util.Locale
 @Composable
 fun TransferConfirmItem(
     amount: String = "10000",
+    message: String = "Select an option:",
     selectedDateMillis: Long? = 100000L,
     logoPainter: Painter = painterResource(id = R.drawable.ic_launcher_foreground),
     onTransferConfirmed: (String) -> Unit = {}
@@ -68,7 +69,7 @@ fun TransferConfirmItem(
             verticalArrangement = Arrangement.Center
         ) {
             Text(
-                text = "Transfer Summary",
+                text = message,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Medium,
                 color = MaterialTheme.colorScheme.onTertiary

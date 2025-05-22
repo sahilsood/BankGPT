@@ -62,7 +62,8 @@ fun getTransferFlowInstructions(user: String): String {
           "next": "transfer",
           "recipient": "{recipient_name}",
           "amount": {amount},
-          "date": "{MM/dd/YYYY}"
+          "date": "{MM/dd/YYYY}",
+          "message": "Please confirm your Zelle transfer:"
         }
         ✅ After Confirm: Please respond to user that the transfer has been scheduled.
     """.trimIndent()
@@ -92,7 +93,7 @@ fun getZelleFlowInstructions(user: String): String {
         ✅ If Pay/Request not provided:
         {"next": "zelle_action", "message": "Would you like to send or request money using Zelle?"}
         ✅ After Zelle action:
-        {"next": "recipient", "message": "Who would you like to {send/request based on previous response} money to $user?"}
+        {"next": "zelle_recipient", "message": "Who would you like to {send/request based on previous response} money to $user?"}
         ✅ After recipient:
         {"next": "amount", "message": "How much would you like to send via Zelle?"}
         ✅ After amount:
@@ -102,8 +103,10 @@ fun getZelleFlowInstructions(user: String): String {
           "next": "zelle",
           "recipient": "{recipient_name}",
           "amount": {amount},
-          "date": "{MM/dd/YYYY}"
+          "date": "{MM/dd/YYYY}",
+          "message": "Please confirm your Zelle transfer:"
         }
+        ✅ After Confirm: Please respond to user that the zelle has been scheduled.
     """.trimIndent()
 }
 

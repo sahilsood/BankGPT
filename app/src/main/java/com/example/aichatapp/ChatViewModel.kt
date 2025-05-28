@@ -1,6 +1,7 @@
 package com.example.aichatapp
 
 import android.graphics.Bitmap
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.aichatapp.data.Chat
@@ -111,15 +112,42 @@ class ChatViewModel : ViewModel() {
         }
     }
 
-    private fun getChatGPTResponse() {
+    private fun getChatGPTResponse(useRag: Boolean = true) {
         viewModelScope.launch {
-            val response = repository.getChatResponse(_conversationHistory.value)
+            setLoading(value = true)
+            Log.d("ChatViewModel", "getChatGPTResponse invoked with useRag = $useRag")
 
-            // Process assistant's response and add it to conversation history
-            response?.choices?.firstOrNull()?.message?.let { assistantMessage ->
+            try {
+                val responseContent = if (useRag) {
+                    val latestUserPrompt =
+                        _conversationHistory.value.lastOrNull { it.role == "user" }?.content
+                    Log.d("ChatViewModel", "Latest user prompt for RAG: $latestUserPrompt")
+
+                    latestUserPrompt?.let { query ->
+                        val ragResponse = repository.getRagResponse(prompt = query)
+                        Log.d("ChatViewModel", "RAG response: $ragResponse")
+                        ragResponse
+                    }
+                } else {
+                    val response = repository.getChatResponse(_conversationHistory.value)
+                    Log.d("ChatViewModel", "ChatGPT API response: $response")
+
+                    response?.choices?.firstOrNull()?.message?.content
+                }
+
+                responseContent?.let { content ->
+                    Log.d("ChatViewModel", "Received assistant content: $content")
+                    setLoading(value = false)
+                    val message = Message(role = "assistant", content = content)
+                    addToHistory(message)
+                    handleAssistantResponse(content)
+                } ?: run {
+                    Log.e("ChatViewModel", "Response content is null")
+                    setLoading(value = false)
+                }
+            } catch (e: Exception) {
+                Log.e("ChatViewModel", "Exception in getChatGPTResponse: ${e.message}", e)
                 setLoading(value = false)
-                addToHistory(assistantMessage)
-                handleAssistantResponse(assistantMessage.content)
             }
         }
     }

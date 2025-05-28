@@ -4,6 +4,7 @@ import com.example.aichatapp.BuildConfig
 import com.example.aichatapp.service.ChatRequest
 import com.example.aichatapp.service.ChatResponse
 import com.example.aichatapp.service.Message
+import com.example.aichatapp.service.RagRetrofitInstance
 import com.example.aichatapp.service.RetrofitInstance
 
 class ChatRepository {
@@ -23,4 +24,15 @@ class ChatRepository {
             null
         }
     }
+
+    suspend fun getRagResponse(prompt: String): String? {
+        return try {
+            val response = RagRetrofitInstance.api.queryRag(mapOf("query" to prompt))
+            response.answer
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
+
 }

@@ -31,6 +31,7 @@ androidx-navigation-compose = { module = "androidx.navigation:navigation-compose
 coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coilCompose" }
 coil3-coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coilComposeVersion" }
 converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "converterGson" }
+converter-scalars = { module = "com.squareup.retrofit2:converter-scalars", version.ref = "converterGson" }
 generativeai = { module = "com.google.ai.client.generativeai:generativeai", version.ref = "generativeai" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }

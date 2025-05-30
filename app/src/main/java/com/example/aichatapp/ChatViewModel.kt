@@ -112,7 +112,7 @@ class ChatViewModel : ViewModel() {
         }
     }
 
-    private fun getChatGPTResponse(useRag: Boolean = true) {
+    private fun getChatGPTResponse(useRag: Boolean = false) {
         viewModelScope.launch {
             setLoading(value = true)
             Log.d("ChatViewModel", "getChatGPTResponse invoked with useRag = $useRag")

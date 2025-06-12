@@ -1,5 +1,9 @@
 # BankGPT
 
+![Screenshot 2025-06-12 at 6 11 17 PM](https://github.com/user-attachments/assets/39b94241-2ef5-4ada-ac54-757d43a18c14)
+![Screenshot 2025-06-12 at 6 11 05 PM](https://github.com/user-attachments/assets/c48226d2-9096-4b9a-8d9c-84c7ea203e0e)
+
+
 **BankGPT** is a generative AI application powered by OpenAI's GPT model. It is being developed as part of a **Grad Applied Project**. The app focuses on leveraging AI to assist with various banking tasks, providing users with an intuitive and seamless banking experience.
 
 ## Project Overview

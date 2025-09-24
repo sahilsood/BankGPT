@@ -32,6 +32,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.Send
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.rounded.AddPhotoAlternate
 import androidx.compose.material.icons.rounded.Send
@@ -354,7 +355,7 @@ fun ChatScreen(
                         chatViewModel.onEvent(ChatUiEvent.SendPrompt(chatState.prompt, bitmap))
                         uriState.update { "" }
                     },
-                imageVector = Icons.Rounded.Send,
+                imageVector = Icons.AutoMirrored.Rounded.Send,
                 contentDescription = "Send message",
                 tint = MaterialTheme.colorScheme.primary
             )

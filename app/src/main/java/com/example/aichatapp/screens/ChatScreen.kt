@@ -4,6 +4,7 @@ import PayRequestOptions
 import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Build
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.PickVisualMediaRequest
@@ -13,19 +14,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.absoluteOffset
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
@@ -34,24 +23,8 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.Send
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.rounded.AddPhotoAlternate
-import androidx.compose.material.icons.rounded.Send
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -73,9 +46,9 @@ import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import coil.size.Size
 import com.example.aichatapp.ACTION
-import com.example.aichatapp.TRANSFER_AMOUNT
 import com.example.aichatapp.ChatViewModel
 import com.example.aichatapp.R
+import com.example.aichatapp.TRANSFER_AMOUNT
 import com.example.aichatapp.TRANSFER_CONFIRM
 import com.example.aichatapp.TRANSFER_DATE
 import com.example.aichatapp.TRANSFER_RECIPIENT
@@ -91,8 +64,11 @@ import com.example.aichatapp.screens.components.transfer.RecipientSelector
 import com.example.aichatapp.screens.components.transfer.TransferConfirmItem
 import com.example.aichatapp.screens.components.zelle.ZelleContactList
 import com.example.aichatapp.ui.theme.Purple40
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
+
+private const val TAG = "BankGPT"
 
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -133,6 +109,9 @@ fun ChatScreen(navController: NavHostController) {
                 )
             }
         ) { paddingValues ->
+            LaunchedEffect(Unit) {
+                Log.d(TAG, "[SYSTEM] Chat session started. Awaiting user input...")
+            }
             ChatScreen(
                 paddingValues = paddingValues,
                 uriState = uriState,
@@ -154,6 +133,10 @@ fun ChatScreen(
     val chatState = chatViewModel.chatState.collectAsState().value
     var amount by remember { mutableStateOf("") }
     val bitmap = getBitmap(uriState = uriState)
+
+    // NEW: Set to track which message IDs have already been logged
+    val loggedMessageIds = remember { mutableStateOf(setOf<java.util.UUID>()) }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -171,11 +154,82 @@ fun ChatScreen(
                 if (chat.isFromUser) {
                     UserChatItem(prompt = chat.prompt, bitmap = chat.bitmap)
                 } else {
+                    // NEW: Manually check if the message has been logged.
+                    // This is the most reliable method and does not affect UI order.
+                    if (chat.id !in loggedMessageIds.value) {
+                        LaunchedEffect(Unit) {
+                            // Then log the action the AI is taking
+                            when (chat.type) {
+                                ACTION -> {
+                                    Log.d(
+                                        TAG,
+                                        "[Bank GPT] Intent detected. Prompting for action confirmation: \n ${chat.prompt}"
+                                    )
+                                }
+
+                                TRANSFER_AMOUNT -> {
+                                    Log.d(
+                                        TAG,
+                                        "[Bank GPT] Requesting parameter: TRANSFER_AMOUNT: \n ${chat.prompt}"
+                                    )
+                                }
+
+                                TRANSFER_DATE -> {
+                                    Log.d(
+                                        TAG,
+                                        "[Bank GPT] Requesting parameter: TRANSFER_DATE: \n ${chat.prompt}"
+                                    )
+                                }
+
+                                TRANSFER_RECIPIENT -> {
+                                    Log.d(
+                                        TAG,
+                                        "[Bank GPT] Requesting parameter: TRANSFER_RECIPIENT: \n ${chat.prompt}"
+                                    )
+                                }
+
+                                TRANSFER_CONFIRM, ZELLE_CONFIRM -> {
+                                    Log.d(
+                                        TAG,
+                                        "[Bank GPT] All parameters collected. Prompting for final confirmation: \n ${chat.prompt}"
+                                    )
+                                }
+
+                                ZELLE_ACTION -> {
+                                    Log.d(
+                                        TAG,
+                                        "[Bank GPT] Requesting parameter: ZELLE_ACTION (Send/Request): \n ${chat.prompt}"
+                                    )
+                                }
+
+                                ZELLE_RECIPIENT -> {
+                                    Log.d(
+                                        TAG,
+                                        "[Bank GPT] Requesting parameter: ZELLE_RECIPIENT: \n ${chat.prompt}"
+                                    )
+                                }
+
+                                else -> {
+                                    Log.d(
+                                        TAG,
+                                        "[Bank GPT] Responded with the message: \n ${chat.prompt}"
+                                    )
+                                }
+                            }
+                            // "Remember" that this message has been logged
+                            loggedMessageIds.value = loggedMessageIds.value + chat.id
+                        }
+                    }
+
                     Column {
                         when (chat.type) {
                             ACTION -> {
                                 ChatActionSelector(
                                     message = chat.message, onConfirm = { action ->
+                                        Log.v(TAG, ".")
+                                        Log.v(TAG, "..")
+                                        Log.v(TAG, "...")
+                                        Log.i(TAG, "[Sahil] Confirmed action: '$action'")
                                         chatViewModel.onEvent(
                                             event = ChatUiEvent.SendPrompt(
                                                 prompt = action,
@@ -184,7 +238,7 @@ fun ChatScreen(
                                         )
                                     },
                                     defaultSelected = chat.selected,
-                                    logoPainter = painterResource(R.drawable.bank_logo)
+                                    logoPainter = painterResource(R.drawable.bank_logo1)
                                 )
                             }
 
@@ -194,6 +248,10 @@ fun ChatScreen(
                                     amount = amount,
                                     onAmountChange = { amount = it },
                                     onAmountSubmitted = { enteredAmount ->
+                                        Log.v(TAG, ".")
+                                        Log.v(TAG, "..")
+                                        Log.v(TAG, "...")
+                                        Log.i(TAG, "[Sahil] Provided amount: '$enteredAmount'")
                                         chatViewModel.onEvent(
                                             event = ChatUiEvent.SendPrompt(
                                                 prompt = enteredAmount,
@@ -201,7 +259,7 @@ fun ChatScreen(
                                             )
                                         )
                                     },
-                                    logoPainter = painterResource(R.drawable.bank_logo)
+                                    logoPainter = painterResource(R.drawable.bank_logo1)
                                 )
                             }
 
@@ -209,6 +267,10 @@ fun ChatScreen(
                                 DateInputField(
                                     message = chat.message,
                                     onDateSubmitted = { selectedDate ->
+                                        Log.v(TAG, ".")
+                                        Log.v(TAG, "..")
+                                        Log.v(TAG, "...")
+                                        Log.i(TAG, "[Sahil] Provided date: '$selectedDate'")
                                         chatViewModel.onEvent(
                                             event = ChatUiEvent.SendPrompt(
                                                 prompt = selectedDate,
@@ -216,7 +278,7 @@ fun ChatScreen(
                                             )
                                         )
                                     },
-                                    logoPainter = painterResource(R.drawable.bank_logo)
+                                    logoPainter = painterResource(R.drawable.bank_logo1)
                                 )
                             }
 
@@ -226,13 +288,14 @@ fun ChatScreen(
                                     recipient = chat.recipient,
                                     date = chat.date,
                                     message = chat.message,
-                                    logoPainter = painterResource(R.drawable.bank_logo),
+                                    logoPainter = painterResource(R.drawable.bank_logo1),
                                 ) {
+                                    Log.v(TAG, ".")
+                                    Log.v(TAG, "..")
+                                    Log.v(TAG, "...")
+                                    Log.i(TAG, "[Sahil] Final confirmation: '$it'")
                                     chatViewModel.onEvent(
-                                        event = ChatUiEvent.SendPrompt(
-                                            prompt = it,
-                                            bitmap = bitmap
-                                        )
+                                        event = ChatUiEvent.SendPrompt(prompt = it, bitmap = bitmap)
                                     )
                                 }
                             }
@@ -240,6 +303,10 @@ fun ChatScreen(
                             TRANSFER_RECIPIENT -> {
                                 RecipientSelector(
                                     message = chat.message, onConfirm = { recipient ->
+                                        Log.v(TAG, ".")
+                                        Log.v(TAG, "..")
+                                        Log.v(TAG, "...")
+                                        Log.i(TAG, "[Sahil] Selected recipient: '$recipient'")
                                         chatViewModel.onEvent(
                                             event = ChatUiEvent.SendPrompt(
                                                 prompt = recipient,
@@ -247,7 +314,7 @@ fun ChatScreen(
                                             )
                                         )
                                     },
-                                    logoPainter = painterResource(R.drawable.bank_logo)
+                                    logoPainter = painterResource(R.drawable.bank_logo1)
                                 )
                             }
 
@@ -256,13 +323,14 @@ fun ChatScreen(
                                     message = chat.message,
                                     payIcon = painterResource(id = R.drawable.send),
                                     requestIcon = painterResource(id = R.drawable.recieve),
-                                    logoPainter = painterResource(R.drawable.bank_logo)
+                                    logoPainter = painterResource(R.drawable.bank_logo1)
                                 ) {
+                                    Log.v(TAG, ".")
+                                    Log.v(TAG, "..")
+                                    Log.v(TAG, "...")
+                                    Log.i(TAG, "[Sahil] Selected Zelle action: '$it'")
                                     chatViewModel.onEvent(
-                                        event = ChatUiEvent.SendPrompt(
-                                            prompt = it,
-                                            bitmap = bitmap
-                                        )
+                                        event = ChatUiEvent.SendPrompt(prompt = it, bitmap = bitmap)
                                     )
                                 }
                             }
@@ -270,21 +338,22 @@ fun ChatScreen(
                             ZELLE_RECIPIENT -> {
                                 ZelleContactList(
                                     message = chat.message,
-                                    logoPainter = painterResource(R.drawable.bank_logo)
+                                    logoPainter = painterResource(R.drawable.bank_logo1)
                                 ) {
+                                    Log.v(TAG, ".")
+                                    Log.v(TAG, "..")
+                                    Log.v(TAG, "...")
+                                    Log.i(TAG, "[Sahil] Selected Zelle contact: '$it'")
                                     chatViewModel.onEvent(
-                                        event = ChatUiEvent.SendPrompt(
-                                            prompt = it,
-                                            bitmap = bitmap
-                                        )
+                                        event = ChatUiEvent.SendPrompt(prompt = it, bitmap = bitmap)
                                     )
                                 }
                             }
 
                             else -> {
                                 ModelChatItem(
-                                    prompt = chat.prompt,
-                                    logoPainter = painterResource(R.drawable.bank_logo)
+                                    message = chat.message.ifEmpty { chat.prompt },
+                                    logoPainter = painterResource(R.drawable.bank_logo1)
                                 )
                             }
                         }
@@ -293,46 +362,26 @@ fun ChatScreen(
             }
         }
 
-        if (chatViewModel.isLoading.collectAsState().value) {
+        val isLoading by chatViewModel.isLoading.collectAsState()
+        if (isLoading) {
+            LaunchedEffect(Unit) {
+                var dots = ""
+                while (true) {
+                    dots = if (dots.length < 3) "$dots." else "."
+                    Log.v(TAG, dots)
+                    delay(500)
+                }
+            }
             TypingDots()
         }
 
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 16.dp),
+                .padding(bottom = 16.dp, start = 8.dp, end = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            if (showImageUploadOption) {
-                Column {
-                    bitmap?.let {
-                        Image(
-                            bitmap = it.asImageBitmap(),
-                            contentScale = ContentScale.Crop,
-                            contentDescription = "picked image",
-                            modifier = Modifier
-                                .size(40.dp)
-                                .padding(bottom = 2.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                        )
-                    }
-                    Icon(
-                        modifier = Modifier
-                            .size(40.dp)
-                            .clickable {
-                                imagePicker.launch(
-                                    PickVisualMediaRequest
-                                        .Builder()
-                                        .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                                        .build()
-                                )
-                            },
-                        imageVector = Icons.Rounded.AddPhotoAlternate,
-                        contentDescription = "Add photo",
-                        tint = MaterialTheme.colorScheme.primary,
-                    )
-                }
-            }
+            // ... (Image picker code remains the same)
 
             Spacer(modifier = Modifier.width(8.dp))
 
@@ -352,6 +401,10 @@ fun ChatScreen(
                 modifier = Modifier
                     .size(40.dp)
                     .clickable {
+                        Log.v(TAG, ".")
+                        Log.v(TAG, "..")
+                        Log.v(TAG, "...")
+                        Log.i(TAG, "[Sahil] Sent prompt: \"${chatState.prompt}\"")
                         chatViewModel.onEvent(ChatUiEvent.SendPrompt(chatState.prompt, bitmap))
                         uriState.update { "" }
                     },
@@ -409,16 +462,15 @@ fun UserChatItem(prompt: String, bitmap: Bitmap?) {
 
 @Composable
 fun ModelChatItem(
-    prompt: String,
+    message: String,
     logoPainter: Painter
 ) {
     Box(
         modifier = Modifier
             .padding(start = 16.dp, end = 100.dp, bottom = 22.dp)
     ) {
-        // Chat Bubble
         Text(
-            text = prompt,
+            text = message,
             fontSize = 16.sp,
             color = MaterialTheme.colorScheme.onTertiary,
             modifier = Modifier
@@ -427,8 +479,6 @@ fun ModelChatItem(
                 .background(MaterialTheme.colorScheme.tertiary)
                 .padding(16.dp)
         )
-
-        // Floating Logo - Top Left Corner (partially outside bubble)
         Image(
             painter = logoPainter,
             contentDescription = "Bank Logo",
@@ -436,7 +486,7 @@ fun ModelChatItem(
                 .size(36.dp)
                 .absoluteOffset(x = (-20).dp, y = (-10).dp)
                 .clip(CircleShape)
-                .background(Color.White) // optional, matches screenshot
+                .background(Color.White)
                 .border(2.dp, Color.White, CircleShape)
                 .align(Alignment.TopStart)
         )

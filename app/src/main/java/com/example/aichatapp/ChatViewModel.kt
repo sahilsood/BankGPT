@@ -45,6 +45,8 @@ private const val SYSTEM = "system"
 
 private const val NEXT = "next"
 
+private const val THOUGHT = "thought"
+
 private const val MESSAGE = "message"
 
 private const val SELECTED = "selected"
@@ -155,7 +157,8 @@ class ChatViewModel : ViewModel() {
     private fun handleAssistantResponse(content: String) {
         try {
             val jsonResponse = JSONObject(content)
-            val next = jsonResponse.getString(NEXT)
+            val next = jsonResponse.optString(NEXT, "text")
+            val thought = jsonResponse.optString(THOUGHT, "")
             val message = jsonResponse.optString(MESSAGE, "")
             val selected = jsonResponse.optString(SELECTED, "")
             val recipient = jsonResponse.optString(RECIPIENT, "")
@@ -171,7 +174,8 @@ class ChatViewModel : ViewModel() {
                 selected = selected,
                 recipient = recipient,
                 amount = amount,
-                date = date
+                date = date,
+                thought = thought
             )
 
             _chatState.update {

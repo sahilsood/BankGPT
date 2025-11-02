@@ -74,7 +74,7 @@ fun TransferConfirmItem(
                 modifier = Modifier.padding(bottom = 8.dp)
             )
 
-            AccountSelector("From", "Truist Savings", "", "•7801")
+            AccountSelector("From", "Bank Savings", "", "•7801")
             AccountSelector("To", recipient, "", "•8012")
             Spacer(modifier = Modifier.height(8.dp))
             AccountSelector("Date", date, "", "")
